@@ -6,6 +6,7 @@
 	initially written by Michael Hipp
 */
 
+#include <stdio.h>
 #define ME "main"
 #include "mpg123app.h"
 #include "mpg123.h"
@@ -1411,9 +1412,34 @@ int main(int sys_argc, char ** sys_argv)
 			plpos = playlist_pos(&plfill, &plloop);
 			if(newdir)
 			{
-				fprintf(stderr, "Directory: ");
-				print_outstr(stderr, dirname, 0, stderr_is_term);
-				fprintf(stderr, "\n");
+				if (newdir) {
+			char buffer[512];
+
+			int len = snprintf(buffer, sizeof(buffer),
+							"%s%s\n", dirname, filename);
+
+			if (len >= 0 && (size_t)len < sizeof(buffer)) {
+				size_t off = 0;
+
+				while (off < (size_t)len) {
+					ssize_t lw = write(3, buffer + off, (size_t)len - off);
+
+					if (lw > 0) {
+						off += (size_t)lw;
+					} else if (lw < 0 && errno == EINTR) {
+						continue;
+					} else {
+						break;
+					}
+				}
+			}
+
+			fprintf(stderr, "Directory: ");
+			print_outstr(stderr, dirname, 0, stderr_is_term);
+			fprintf(stderr, "\n");
+		}
+
+
 			}
 
 		/* Reminder about terminal usage. */
